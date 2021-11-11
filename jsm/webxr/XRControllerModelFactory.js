@@ -3,7 +3,7 @@ import {
 	MeshBasicMaterial,
 	Object3D,
 	SphereGeometry,
-} from '../../../build/three.module.js';
+} from '../../build/three.module.js';
 
 import { GLTFLoader } from '../loaders/GLTFLoader.js';
 
@@ -27,25 +27,25 @@ class XRControllerModel extends Object3D {
 
 	}
 
-	setEnvironmentMap( envMap ) {
+	setEnvironmentMap(envMap) {
 
-		if ( this.envMap == envMap ) {
+		if (this.envMap == envMap) {
 
 			return this;
 
 		}
 
 		this.envMap = envMap;
-		this.traverse( ( child ) => {
+		this.traverse((child) => {
 
-			if ( child.isMesh ) {
+			if (child.isMesh) {
 
 				child.material.envMap = this.envMap;
 				child.material.needsUpdate = true;
 
 			}
 
-		} );
+		});
 
 		return this;
 
@@ -55,33 +55,33 @@ class XRControllerModel extends Object3D {
 	 * Polls data from the XRInputSource and updates the model's components to match
 	 * the real world data
 	 */
-	updateMatrixWorld( force ) {
+	updateMatrixWorld(force) {
 
-		super.updateMatrixWorld( force );
+		super.updateMatrixWorld(force);
 
-		if ( ! this.motionController ) return;
+		if (!this.motionController) return;
 
 		// Cause the MotionController to poll the Gamepad for data
 		this.motionController.updateFromGamepad();
 
 		// Update the 3D model to reflect the button, thumbstick, and touchpad state
-		Object.values( this.motionController.components ).forEach( ( component ) => {
+		Object.values(this.motionController.components).forEach((component) => {
 
 			// Update node data based on the visual responses' current states
-			Object.values( component.visualResponses ).forEach( ( visualResponse ) => {
+			Object.values(component.visualResponses).forEach((visualResponse) => {
 
 				const { valueNode, minNode, maxNode, value, valueNodeProperty } = visualResponse;
 
 				// Skip if the visual response node is not found. No error is needed,
 				// because it will have been reported at load time.
-				if ( ! valueNode ) return;
+				if (!valueNode) return;
 
 				// Calculate the new properties based on the weight supplied
-				if ( valueNodeProperty === MotionControllerConstants.VisualResponseProperty.VISIBILITY ) {
+				if (valueNodeProperty === MotionControllerConstants.VisualResponseProperty.VISIBILITY) {
 
 					valueNode.visible = value;
 
-				} else if ( valueNodeProperty === MotionControllerConstants.VisualResponseProperty.TRANSFORM ) {
+				} else if (valueNodeProperty === MotionControllerConstants.VisualResponseProperty.TRANSFORM) {
 
 					valueNode.quaternion.slerpQuaternions(
 						minNode.quaternion,
@@ -97,9 +97,9 @@ class XRControllerModel extends Object3D {
 
 				}
 
-			} );
+			});
 
-		} );
+		});
 
 	}
 
@@ -110,54 +110,54 @@ class XRControllerModel extends Object3D {
  * saves them to the motionContoller components for use in the frame loop. When
  * touchpads are found, attaches a touch dot to them.
  */
-function findNodes( motionController, scene ) {
+function findNodes(motionController, scene) {
 
 	// Loop through the components and find the nodes needed for each components' visual responses
-	Object.values( motionController.components ).forEach( ( component ) => {
+	Object.values(motionController.components).forEach((component) => {
 
 		const { type, touchPointNodeName, visualResponses } = component;
 
-		if ( type === MotionControllerConstants.ComponentType.TOUCHPAD ) {
+		if (type === MotionControllerConstants.ComponentType.TOUCHPAD) {
 
-			component.touchPointNode = scene.getObjectByName( touchPointNodeName );
-			if ( component.touchPointNode ) {
+			component.touchPointNode = scene.getObjectByName(touchPointNodeName);
+			if (component.touchPointNode) {
 
 				// Attach a touch dot to the touchpad.
-				const sphereGeometry = new SphereGeometry( 0.001 );
-				const material = new MeshBasicMaterial( { color: 0x0000FF } );
-				const sphere = new Mesh( sphereGeometry, material );
-				component.touchPointNode.add( sphere );
+				const sphereGeometry = new SphereGeometry(0.001);
+				const material = new MeshBasicMaterial({ color: 0x0000FF });
+				const sphere = new Mesh(sphereGeometry, material);
+				component.touchPointNode.add(sphere);
 
 			} else {
 
-				console.warn( `Could not find touch dot, ${component.touchPointNodeName}, in touchpad component ${component.id}` );
+				console.warn(`Could not find touch dot, ${component.touchPointNodeName}, in touchpad component ${component.id}`);
 
 			}
 
 		}
 
 		// Loop through all the visual responses to be applied to this component
-		Object.values( visualResponses ).forEach( ( visualResponse ) => {
+		Object.values(visualResponses).forEach((visualResponse) => {
 
 			const { valueNodeName, minNodeName, maxNodeName, valueNodeProperty } = visualResponse;
 
 			// If animating a transform, find the two nodes to be interpolated between.
-			if ( valueNodeProperty === MotionControllerConstants.VisualResponseProperty.TRANSFORM ) {
+			if (valueNodeProperty === MotionControllerConstants.VisualResponseProperty.TRANSFORM) {
 
-				visualResponse.minNode = scene.getObjectByName( minNodeName );
-				visualResponse.maxNode = scene.getObjectByName( maxNodeName );
+				visualResponse.minNode = scene.getObjectByName(minNodeName);
+				visualResponse.maxNode = scene.getObjectByName(maxNodeName);
 
 				// If the extents cannot be found, skip this animation
-				if ( ! visualResponse.minNode ) {
+				if (!visualResponse.minNode) {
 
-					console.warn( `Could not find ${minNodeName} in the model` );
+					console.warn(`Could not find ${minNodeName} in the model`);
 					return;
 
 				}
 
-				if ( ! visualResponse.maxNode ) {
+				if (!visualResponse.maxNode) {
 
-					console.warn( `Could not find ${maxNodeName} in the model` );
+					console.warn(`Could not find ${maxNodeName} in the model`);
 					return;
 
 				}
@@ -165,55 +165,55 @@ function findNodes( motionController, scene ) {
 			}
 
 			// If the target node cannot be found, skip this animation
-			visualResponse.valueNode = scene.getObjectByName( valueNodeName );
-			if ( ! visualResponse.valueNode ) {
+			visualResponse.valueNode = scene.getObjectByName(valueNodeName);
+			if (!visualResponse.valueNode) {
 
-				console.warn( `Could not find ${valueNodeName} in the model` );
+				console.warn(`Could not find ${valueNodeName} in the model`);
 
 			}
 
-		} );
+		});
 
-	} );
+	});
 
 }
 
-function addAssetSceneToControllerModel( controllerModel, scene ) {
+function addAssetSceneToControllerModel(controllerModel, scene) {
 
 	// Find the nodes needed for animation and cache them on the motionController.
-	findNodes( controllerModel.motionController, scene );
+	findNodes(controllerModel.motionController, scene);
 
 	// Apply any environment map that the mesh already has set.
-	if ( controllerModel.envMap ) {
+	if (controllerModel.envMap) {
 
-		scene.traverse( ( child ) => {
+		scene.traverse((child) => {
 
-			if ( child.isMesh ) {
+			if (child.isMesh) {
 
 				child.material.envMap = controllerModel.envMap;
 				child.material.needsUpdate = true;
 
 			}
 
-		} );
+		});
 
 	}
 
 	// Add the glTF scene to the controllerModel.
-	controllerModel.add( scene );
+	controllerModel.add(scene);
 
 }
 
 class XRControllerModelFactory {
 
-	constructor( gltfLoader = null ) {
+	constructor(gltfLoader = null) {
 
 		this.gltfLoader = gltfLoader;
 		this.path = DEFAULT_PROFILES_PATH;
 		this._assetCache = {};
 
 		// If a GLTFLoader wasn't supplied to the constructor create a new one.
-		if ( ! this.gltfLoader ) {
+		if (!this.gltfLoader) {
 
 			this.gltfLoader = new GLTFLoader();
 
@@ -221,18 +221,18 @@ class XRControllerModelFactory {
 
 	}
 
-	createControllerModel( controller ) {
+	createControllerModel(controller) {
 
 		const controllerModel = new XRControllerModel();
 		let scene = null;
 
-		controller.addEventListener( 'connected', ( event ) => {
+		controller.addEventListener('connected', (event) => {
 
 			const xrInputSource = event.data;
 
-			if ( xrInputSource.targetRayMode !== 'tracked-pointer' || ! xrInputSource.gamepad ) return;
+			if (xrInputSource.targetRayMode !== 'tracked-pointer' || !xrInputSource.gamepad) return;
 
-			fetchProfile( xrInputSource, this.path, DEFAULT_PROFILE ).then( ( { profile, assetPath } ) => {
+			fetchProfile(xrInputSource, this.path, DEFAULT_PROFILE).then(({ profile, assetPath }) => {
 
 				controllerModel.motionController = new MotionController(
 					xrInputSource,
@@ -240,55 +240,55 @@ class XRControllerModelFactory {
 					assetPath
 				);
 
-				const cachedAsset = this._assetCache[ controllerModel.motionController.assetUrl ];
-				if ( cachedAsset ) {
+				const cachedAsset = this._assetCache[controllerModel.motionController.assetUrl];
+				if (cachedAsset) {
 
 					scene = cachedAsset.scene.clone();
 
-					addAssetSceneToControllerModel( controllerModel, scene );
+					addAssetSceneToControllerModel(controllerModel, scene);
 
 				} else {
 
-					if ( ! this.gltfLoader ) {
+					if (!this.gltfLoader) {
 
-						throw new Error( 'GLTFLoader not set.' );
+						throw new Error('GLTFLoader not set.');
 
 					}
 
-					this.gltfLoader.setPath( '' );
-					this.gltfLoader.load( controllerModel.motionController.assetUrl, ( asset ) => {
+					this.gltfLoader.setPath('');
+					this.gltfLoader.load(controllerModel.motionController.assetUrl, (asset) => {
 
-						this._assetCache[ controllerModel.motionController.assetUrl ] = asset;
+						this._assetCache[controllerModel.motionController.assetUrl] = asset;
 
 						scene = asset.scene.clone();
 
-						addAssetSceneToControllerModel( controllerModel, scene );
+						addAssetSceneToControllerModel(controllerModel, scene);
 
 					},
-					null,
-					() => {
+						null,
+						() => {
 
-						throw new Error( `Asset ${controllerModel.motionController.assetUrl} missing or malformed.` );
+							throw new Error(`Asset ${controllerModel.motionController.assetUrl} missing or malformed.`);
 
-					} );
+						});
 
 				}
 
-			} ).catch( ( err ) => {
+			}).catch((err) => {
 
-				console.warn( err );
+				console.warn(err);
 
-			} );
+			});
 
-		} );
+		});
 
-		controller.addEventListener( 'disconnected', () => {
+		controller.addEventListener('disconnected', () => {
 
 			controllerModel.motionController = null;
-			controllerModel.remove( scene );
+			controllerModel.remove(scene);
 			scene = null;
 
-		} );
+		});
 
 		return controllerModel;
 
